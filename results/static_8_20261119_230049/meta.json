@@ -1,0 +1,8 @@
+{
+ "run_dir": "/home/aryan-john-gonsalves/SDN_Project27/results/static_8_20261119_230049",
+ "duration": 60,
+ "load": 8.0,
+ "app_rate": 4.0,
+ "bg_start": 15,
+ "link_down_at": -1.0
+}
