@@ -72,10 +72,15 @@ class UtilPlotTests(unittest.TestCase):
         self.assertAlmostEqual(s["reroute_time_s"], 1.5)
 
     def test_loss_and_delay(self):
-        d = make_run(self.tmp, "static_6_20261120-102000", [4.0] * 10, lost={3: 125, 4: 125})
+        d = make_run(
+            self.tmp,
+            "static_6_20261120-102000",
+            [4.0] * 10,
+            lost={3: 125, 4: 125, 9: 125}
+        )
         s = up.summarize(d)
         got = 10 * 500
-        self.assertAlmostEqual(s["loss_pct"], 100.0 * 250 / (got + 250))
+        self.assertAlmostEqual(s["loss_pct"], 100.0 * 125 / (got + 125))
         self.assertAlmostEqual(s["mean_delay_ms"], 2.0)
 
     def test_empty_and_missing_files_do_not_crash(self):

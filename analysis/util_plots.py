@@ -163,7 +163,7 @@ def summarize(run_dir, bg_start_s=BG_START_S):
         return sum(r["delay"] * r["rx"] for r in rows) / n if n > 0 else None
 
     got = sum(r["rx"] for r in rx)
-    lost = sum(r["lost"] for r in rx)
+    lost = rx[-1]["lost"] if rx else 0
     cong = [r["thr"] for r in rx if r["t"] >= t0 + bg_start_s]
     s = {
         "run_id": run_id, "mode": mode, "load_mbps": load,

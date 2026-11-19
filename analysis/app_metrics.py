@@ -63,7 +63,7 @@ def main():
         plt.close()
 
     total_rx = df["rx_pkts"].sum()
-    total_lost = df["lost"].sum()
+    total_lost = df["lost"].iloc[-1] if not df.empty else 0
     loss_percent = (
         total_lost / (total_rx + total_lost) * 100
         if total_rx + total_lost > 0 else 0

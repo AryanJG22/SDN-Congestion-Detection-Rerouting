@@ -18,7 +18,7 @@ Hosts: h1 10.0.0.1 (app sender), h2 10.0.0.2 (app receiver), h3 10.0.0.3 (backgr
     P2 = s1 - s3 - s5
     P3 = s1 - s4 - s5
 
-All switch-to-switch links are 10 Mbps (TCLink, queue size 100). The ports of each path are listed in config/paths.json, which is the single source of truth for port numbers.
+All switch-to-switch links are 10 Mbps (TCLink, queue size 100). The ports of each path are listed in config/paths.json, which defines forward application-path ports. Reverse application-path ports are defined in config/paths_reverse.json; background-flow ports are currently defined in controller/forwarding.py.
 
 ## 3. Repository layout
 
@@ -26,7 +26,7 @@ All switch-to-switch links are 10 Mbps (TCLink, queue size 100). The ports of ea
     topology/     topo.py                                      (Person 2)
     controller/   main.py, forwarding.py                       (Person 2)
                   monitor.py                                   (Person 3)
-    config/       paths.json
+    config/       paths.json, paths_reverse.json
     tools/        reroute.py
     analysis/     app_metrics.py (Person 1), util_plots.py (Person 3)
     tests/        unit tests and FakeForwarding stub
@@ -85,7 +85,7 @@ Timeline of one run: t=0 the application starts at 4 Mbps, t=15 the background i
 Draw the graphs for one run, and build the static-versus-adaptive comparison:
 
     python3 analysis/util_plots.py results/<run_id>
-    python3 analysis/util_plots.py --compare results/static_* results/adaptive_*
+    python3 analysis/util_plots.py --compare <six selected congestion-run directories>
 
 ## 6. How it works
 
@@ -129,20 +129,83 @@ Recovery is measured in two ways. Reroute time = REROUTE_DONE minus CONGESTION_D
 
 ## 8. Results
 
-Static routing against adaptive routing (fill in after the experiment runs).
+We evaluated static and adaptive SDN routing using six congestion experiments.
+The application transmitted UDP traffic at a target rate of 4 Mbps, while
+background traffic on P1 was configured at 4, 6, and 8 Mbps.
+
+The table reports receiver throughput during the congested phase, estimated
+packet loss, mean packet delay, reroute time, and throughput recovery.
 
 | Background (Mbps) | Mode | Throughput during congestion (Mbps) | Loss (%) | Mean delay (ms) | Reroute time (s) | Throughput recovery (s) |
 |---|---|---|---|---|---|---|
-| 4 | static | TBD | TBD | TBD | - | TBD |
-| 4 | adaptive | TBD | TBD | TBD | TBD | TBD |
-| 6 | static | TBD | TBD | TBD | - | TBD |
-| 6 | adaptive | TBD | TBD | TBD | TBD | TBD |
-| 8 | static | TBD | TBD | TBD | - | TBD |
-| 8 | adaptive | TBD | TBD | TBD | TBD | TBD |
+| 4 | static | 3.74 | 0.00 | 2.03 | - | never |
+| 4 | adaptive | 3.74 | 0.00 | 2.59 | 0.00 | 0.0 |
+| 6 | static | 3.51 | 4.62 | 111.59 | - | 0.0 |
+| 6 | adaptive | 3.68 | 1.34 | 9.74 | 0.00 | 0.0 |
+| 8 | static | 3.15 | 11.76 | 106.54 | - | 24.4 |
+| 8 | adaptive | 3.60 | 2.83 | 12.19 | 0.01 | 1.2 |
 
-Graphs: results/comparison/comparison.png and results/<run_id>/run_plot.png.
+### Key findings
 
-Conclusion: TBD after the experiments.
+At 4 Mbps background load, both modes achieved approximately 3.74 Mbps
+throughput with no detected packet loss.
+
+At 6 Mbps background load, adaptive routing reduced estimated packet loss
+from 4.62% to 1.34%, while reducing mean delay from 111.59 ms to 9.74 ms.
+
+At 8 Mbps background load, adaptive routing:
+- Increased throughput from 3.15 Mbps to 3.60 Mbps (approximately 14.3%).
+- Reduced estimated packet loss from 11.76% to 2.83% (approximately 75.9%).
+- Reduced mean delay from 106.54 ms to 12.19 ms (approximately 88.6%).
+
+### Link-failure validation
+
+A separate adaptive-routing experiment tested link failure on the active P1
+path. The controller logged LINK_DOWN followed by REROUTE_DONE, switching
+the application flow from P1 to P3.
+
+The recorded interval between these events was approximately 0.614 seconds.
+This measures the controller's logged reroute completion interval, not
+necessarily full end-to-end traffic recovery.
+
+### Measurement notes
+
+The receiver identifies missing UDP packets using sequence-number gaps
+and removes gaps when reordered packets arrive.
+
+The reported loss percentage is calculated using the final outstanding
+missing-sequence count divided by received packets plus that count.
+It is an estimate, not an exact sender-to-receiver loss percentage:
+packets missing before the first received sequence or after the highest
+received sequence are not included.
+
+The comparison uses the original six congestion experiments. Separate
+link-failure experiments are excluded from the congestion comparison.
+
+These results represent individual experimental runs and should not be
+interpreted as statistically established performance guarantees.
+
+### Graphs
+
+- `results/comparison/comparison.png`
+- `results/comparison/comparison.csv`
+- `results/comparison/comparison.md`
+- `results/<run_id>/run_plot.png`
+
+### Conclusion
+
+The experiments demonstrate that adaptive SDN routing can improve UDP
+application performance when the initially selected path becomes congested.
+
+At higher background loads, rerouting the application flow to a less-loaded
+path improved receiver throughput and reduced estimated packet loss and
+delay compared with static routing.
+
+The controller also demonstrated successful path switching following a
+link-failure event.
+
+The results support the effectiveness of congestion-aware SDN routing
+within the tested Mininet topology and traffic conditions.
 
 ## 9. Tests
 
