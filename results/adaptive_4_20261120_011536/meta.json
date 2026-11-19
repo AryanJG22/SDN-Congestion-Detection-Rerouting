@@ -1,0 +1,8 @@
+{
+ "run_dir": "/home/aryan-john-gonsalves/SDN_Project27/results/adaptive_4_20261120_011536",
+ "duration": 60,
+ "load": 4.0,
+ "app_rate": 4.0,
+ "bg_start": 15,
+ "link_down_at": 30.0
+}
