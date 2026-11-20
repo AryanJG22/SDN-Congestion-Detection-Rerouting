@@ -2,7 +2,7 @@
 
 Computer Networks mini-project UE25CS243A, Project 27.
 
-Team: Person 1 (application) <name>, Person 2 (network and forwarding) <name>, Person 3 (monitoring and decision) <name>
+Team: Arushi NS (application) , Aryan John Gonsalves (network and forwarding) , Ashwitha Devadaga (monitoring and decision)
 
 ## 1. Overview
 
